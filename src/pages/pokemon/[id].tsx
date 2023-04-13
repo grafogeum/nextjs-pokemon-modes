@@ -1,10 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from 'react';
+import { GetServerSidePropsContext } from 'next';
+
 import Head from 'next/head';
 import Link from 'next/link';
 import styles from '@/styles/Details.module.css';
-
-import { useRouter } from 'next/router';
 
 interface Pokemon {
 	id: number | string;
@@ -17,25 +16,21 @@ interface Pokemon {
 	}[];
 }
 
-export default function Details() {
-	const {
-		query: { id }
-	} = useRouter();
+export async function getServerSideProps({
+	params
+}: GetServerSidePropsContext) {
+	const response = await fetch(
+		`https://raw.githubusercontent.com/jherr/pokemon/main/pokemon/${params?.id}.json`
+	);
 
-	const [pokemon, setPokemon] = useState<Pokemon | null>(null);
-
-	useEffect(() => {
-		async function getPokemon() {
-			const response = await fetch(
-				`https://raw.githubusercontent.com/jherr/pokemon/main/pokemon/${id}.json`
-			);
-			setPokemon(await response.json());
+	return {
+		props: {
+			pokemon: await response.json()
 		}
-		if (id) {
-			getPokemon();
-		}
-	}, [id]);
+	};
+}
 
+export default function Details({ pokemon }: { pokemon: Pokemon }) {
 	!pokemon && null;
 
 	return (
