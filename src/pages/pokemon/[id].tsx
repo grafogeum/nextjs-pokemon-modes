@@ -1,12 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 import { GetServerSidePropsContext } from 'next';
 
+import staticPokemon from './staticPokemon.json';
+
 import Head from 'next/head';
 import Link from 'next/link';
 import styles from '@/styles/Details.module.css';
+import { useEffect } from 'react';
 
 interface Pokemon {
-	id: number | string;
+	id: string | number;
 	name: string;
 	image: string;
 	type: string[];
@@ -16,9 +19,22 @@ interface Pokemon {
 	}[];
 }
 
-export async function getServerSideProps({
-	params
-}: GetServerSidePropsContext) {
+export async function getStaticPaths() {
+	const resp = await fetch(
+		'https://jherr-pokemon.s3.us-west-1.amazonaws.com/index.json'
+	);
+
+	const pokemonList = await resp.json();
+
+	return {
+		paths: pokemonList.map((pokemon: Pick<Pokemon, 'id'>, id: number) => ({
+			params: { id: id.toString() }
+		})),
+		fallback: false
+	};
+}
+
+export async function getStaticProps({ params }: GetServerSidePropsContext) {
 	const response = await fetch(
 		`https://raw.githubusercontent.com/jherr/pokemon/main/pokemon/${params?.id}.json`
 	);
@@ -31,6 +47,7 @@ export async function getServerSideProps({
 }
 
 export default function Details({ pokemon }: { pokemon: Pokemon }) {
+	console.log(pokemon?.name);
 	!pokemon && null;
 
 	return (
